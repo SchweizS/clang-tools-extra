@@ -2,6 +2,7 @@ set(LLVM_LINK_COMPONENTS support)
 
 add_clang_library(clangTidyMiscModule
   DefinitionsInHeadersCheck.cpp
+  HeaderGuardCheck.cpp
   MiscTidyModule.cpp
   MisplacedConstCheck.cpp
   NewDeleteOverloadsCheck.cpp
@@ -27,3 +28,5 @@ add_clang_library(clangTidyMiscModule
   clangTidyUtils
   clangTooling
   )
+
+target_compile_features(clangTidyMiscModule PUBLIC cxx_std_17)

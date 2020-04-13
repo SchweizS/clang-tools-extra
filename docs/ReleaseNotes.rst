@@ -115,6 +115,11 @@ Improvements to clang-tidy
   Finds historical use of ``unsigned`` to hold vregs and physregs and rewrites
   them to use ``Register``
 
+- New :doc:`misc-header-guard
+  <clang-tidy/checks/misc-header-guard>` check.
+
+  FIXME: add release notes.
+
 - New :doc:`objc-missing-hash
   <clang-tidy/checks/objc-missing-hash>` check.
 
