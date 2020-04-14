@@ -29,4 +29,3 @@ add_clang_library(clangTidyMiscModule
   clangTooling
   )
 
-target_compile_features(clangTidyMiscModule PUBLIC cxx_std_17)

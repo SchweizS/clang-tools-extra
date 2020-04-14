@@ -10,8 +10,6 @@
 #define LLVM_CLANG_TOOLS_EXTRA_CLANG_TIDY_MISC_HEADERGUARDCHECK_H
 
 #include "../utils/HeaderGuard.h"
-#include <array>
-#include <utility>
 #include <vector>
 namespace clang {
 namespace tidy {
@@ -22,63 +20,59 @@ namespace misc {
 /// For the user-facing documentation see:
 /// http://clang.llvm.org/extra/clang-tidy/checks/misc-header-guard.html
 
-#define CLANG_TIDY_MISC_HEADER_GUARD_CHECK_ENTRY                               \
-  const char *_name() const override { return name; }                          \
-  const char *const *_dirs() const override { return dirs.data(); }            \
-  size_t _dirs_size() const override { return dirs.size(); }                \
-  const std::array<const char *const, 2> * _repl() const override {       \
-    return repl.data();                                                        \
-  }                                                                            \
-  size_t _repl_size() const override { return repl.size(); }
-
 class HeaderGuardCheck : public utils::HeaderGuardCheck {
 
-  struct base {
-    using repl_t = std::array<const char *const, 2>;
-    static constexpr auto name = "";
-    static constexpr std::array<const char *, 0> dirs{};
-    static constexpr std::array<repl_t, 0> repl{};
-    virtual const char *_name() const = 0;
-    virtual const char *const *_dirs() const = 0;
-    virtual size_t _dirs_size() const = 0;
-    virtual const repl_t *  _repl() const = 0;
-    virtual size_t _repl_size() const = 0;
+public:
+  struct StyleEntry {
+    struct BaseDirectoryEntry {
+      BaseDirectoryEntry(StringRef name, StringRef replacement = {})
+          : Name(name), Replacement(replacement) {}
+      StringRef Name;
+      StringRef Replacement;
+    };
+    struct ReplaceDirectoryEntry {
+      ReplaceDirectoryEntry(StringRef name, StringRef replacement)
+          : Name(name), Replacement(replacement) {}
+      StringRef Name;
+      StringRef Replacement;
+    };
+    StringRef Name;
+    std::vector<BaseDirectoryEntry> BaseDirectories;
+    std::vector<ReplaceDirectoryEntry> ReplaceDirectories;
+    bool EndIf;
   };
 
-  static constexpr struct llvm_t : base {
-    CLANG_TIDY_MISC_HEADER_GUARD_CHECK_ENTRY
-
-    static constexpr auto name = "llvm";
-    static constexpr std::array<const char *, 2> dirs{"include/", "llvm/"};
-    static constexpr std::array<repl_t, 2> repl{{{"tools/clang/", "tools/"},{"/llvm/", "h"}}};
-  } _llvm;
-  static constexpr struct def_t : base {
-    CLANG_TIDY_MISC_HEADER_GUARD_CHECK_ENTRY
-
-    static constexpr auto name = "default";
-    static constexpr std::array<const char *, 2> dirs{"src", "include"};
-    static constexpr std::array<repl_t, 0> repl{};
-  } _def;
-
-  static constexpr const base *Styles[] = {&_def, &_llvm};
-  static const base *getStyleByName(const std::string &name);
-
-  std::vector<llvm::StringRef> BaseDirs;
-  const base *Style;
-  std::string _BaseDirs;
-  std::string _RenameDirs;
-  std::string _Style;
+private:
+  struct SelectedStyleEntry: StyleEntry {
+  public:
+    void setBaseStyle(const StyleEntry* const Style = nullptr, const StringRef Name = {});
+    void setReplaceDirectories(std::string ReplaceDirectories);
+    void setBaseDirectories(std::string BaseDirectories);
+    void setEndIf(std::string EndIf);
+    const std::string& getStyleName()  const { return RawName; }
+    const std::string& getReplaceDirString() const { return RawReplaceDirectories; }
+    const std::string& getBaseDirString() const { return RawBaseDirectories; }
+    const std::string& getEndIf() const { return RawEndIf; }
+  private:
+    std::string RawName;
+    std::string RawBaseDirectories;
+    std::string RawReplaceDirectories;
+    std::string RawEndIf;
+  };
 
 public:
   HeaderGuardCheck(StringRef Name, ClangTidyContext *Context);
 
-  bool shouldSuggestEndifComment(StringRef Filename) override { return false; }
+  bool shouldSuggestEndifComment(StringRef Filename) override { return Style.EndIf; }
   std::string getHeaderGuard(StringRef Filename, StringRef OldGuard) override;
   void storeOptions(ClangTidyOptions::OptionMap &Opts) override;
 
 private:
   std::vector<std::pair<llvm::StringRef, llvm::StringRef>> RenameDirs;
   void loadOptions();
+  void selectStyleByName(StringRef name);
+
+  SelectedStyleEntry Style;
 };
 
 } // namespace misc

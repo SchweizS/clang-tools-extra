@@ -118,7 +118,7 @@ Improvements to clang-tidy
 - New :doc:`misc-header-guard
   <clang-tidy/checks/misc-header-guard>` check.
 
-  FIXME: add release notes.
+  Finds header files with wrong/missing header guards
 
 - New :doc:`objc-missing-hash
   <clang-tidy/checks/objc-missing-hash>` check.
